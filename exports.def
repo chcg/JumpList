@@ -1,0 +1,3 @@
+LIBRARY NppJumpList
+EXPORTS
+	ParseJPCmdW
