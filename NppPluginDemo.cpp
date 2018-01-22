@@ -37,14 +37,14 @@ BOOL APIENTRY DllMain( HANDLE hModule,
       case DLL_PROCESS_DETACH:
 		  {
 			// clean up only if dll was loaded by notepad++
-			TCHAR procPath[MAX_PATH] = {0};
+			/*TCHAR procPath[MAX_PATH] = {0};
 			::GetModuleFileName(NULL, procPath, sizeof(procPath)-1);
 			
 			if (_tcsicmp(::PathFindFileName(procPath), TEXT("rundll32.exe")))
 			{
 				commandMenuCleanUp();
 				pluginCleanUp();
-			}
+			}*/
 			break;
 		  }
 
@@ -84,12 +84,17 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 			pluginInit();
 		
 		if (   (notifyCode->nmhdr.code == NPPN_FILECLOSED)        // when these messages come,
-			//|| (notifyCode->nmhdr.code == NPPN_FILEBEFOREOPEN)    // it's possible that
 			|| (notifyCode->nmhdr.code == NPPN_FILEOPENED)        // recent list has changed
 			|| (notifyCode->nmhdr.code == NPPN_FILELOADFAILED) )  // 
 		{
 			if ((settings->enableJP) && (settings->showCustomRecent))
 				ApplyJumpListSettings();
+		}
+
+		if (notifyCode->nmhdr.code == NPPN_SHUTDOWN)
+		{
+			commandMenuCleanUp();
+			pluginCleanUp();
 		}
 	}
 }

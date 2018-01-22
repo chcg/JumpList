@@ -28,9 +28,12 @@ const TCHAR MODE_RECENT_CMD = TEXT('R');
 
 const UINT recentID = IDM_FILEMENU_LASTONE + 1; // ID of first recent files menu item
 const UINT recentMax = 30;
+const int NPP_MENUINDEX_FILE = 0;
 
 TCHAR DEFAULT_ICON_PATH[MAX_PATH] = TEXT("");
 const int DEFAULT_ICON_RESID = 100; // npp main icon
+
+bool initedCOM = false, inited = false;
 
 // this function will be called by jump list tasks via rundll32.exe. launches npp if it isn't running already.
 void CALLBACK ParseJPCmdW(HWND hwnd, HINSTANCE hinst, LPWSTR lpCmdLine, int nCmdShow);
@@ -64,20 +67,20 @@ void AddAvailTask(LPCTSTR _taskName, LPCTSTR _cmdName, UINT _msg, WPARAM _wParam
 
 bool InitJumpList()
 {
+	inited = initedCOM = false;
+
 	HRESULT hr = ::SetCurrentProcessExplicitAppUserModelID(wszAppID);
 	
 	if FAILED(hr)
 		return false;
 
-	hr = ::CoInitializeEx(0, COINIT_APARTMENTTHREADED);
+	initedCOM = SUCCEEDED(::CoInitializeEx(0, COINIT_APARTMENTTHREADED));
 
-	if FAILED(hr)
-		return false;
-	
 	::GetModuleFileName(NULL, DEFAULT_ICON_PATH, sizeof(DEFAULT_ICON_PATH));
 
 	FillAvailTasksMap();
 
+	inited = true;
 	return true;
 }
 
@@ -177,7 +180,13 @@ bool DestroyJumpList()
 
 bool DeinitJumpList()
 {
-	::CoUninitialize();
+	if (initedCOM)
+	{
+		::CoUninitialize();
+		initedCOM = false;
+	}
+
+	inited = false;
 
 	return true;
 }
@@ -192,7 +201,7 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 		return hr;
 
 	HMENU hNppMainMenu = ::GetMenu(nppData._nppHandle);
-	HMENU hNppFileMenu = ::GetSubMenu(hNppMainMenu, 0); // MENUINDEX_FILE = 0
+	HMENU hNppFileMenu = ::GetSubMenu(hNppMainMenu, NPP_MENUINDEX_FILE);
 
 	std::vector<tstring> recentFilePaths;
 	std::vector<tstring> recentFileNames;
@@ -263,8 +272,8 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 	
 	// TODO: get shell icons
 	// upd: 1. the most proper way is to just register npp as non-default handler for file types on "file opened" notification,
-	//      and use default recent list.
-	//      2. get hIcon's and save needed icons in tmp file. ugly.
+	//      and use default recent list or use shellitems in custom list.
+	//      2. get hIcon's and save needed icons in tmp file. ugly and not always correct.
 
 	for (std::map<int, int>::iterator it = menuPosToVecPos.begin(); it != menuPosToVecPos.end(); ++it)
     {
@@ -532,27 +541,38 @@ void SendNppRecentCmd(LPTSTR _idStr, LPTSTR _menuStr)
 	HWND hNpp = FindNppWindow();
 
 	if (!hNpp)
-		exit;
-
-	UINT itemId = _ttoi(_idStr);
+		return;
 
 	HMENU hNppMainMenu = ::GetMenu(hNpp);
-	HMENU hNppFileMenu = ::GetSubMenu(hNppMainMenu, 0); // MENUINDEX_FILE = 0
+	HMENU hNppFileMenu = ::GetSubMenu(hNppMainMenu, NPP_MENUINDEX_FILE);
 
-	MENUITEMINFO itemInfo = {0};
-	TCHAR buf[1024] = {0};
-	itemInfo.cbSize = sizeof(MENUITEMINFO);
-	itemInfo.fMask = MIIM_STRING;
-	itemInfo.dwTypeData = buf;
-	itemInfo.cch = sizeof(buf);
-	
-	if (!::GetMenuItemInfo(hNppFileMenu, itemId, false, &itemInfo))
-		exit;
+	bool foundItem = false;
+	UINT itemID;
 
-	if (_tcscmp(buf, _menuStr))
-		exit; // wrong menu item, abort
+	for (int i = 0; i < recentMax; ++i)
+	{
+		TCHAR buf[1024] = {0};
+		MENUITEMINFO itemInfo = {0};
+		itemInfo.cbSize = sizeof(MENUITEMINFO);
+		itemInfo.fMask = MIIM_STRING;
+		itemInfo.dwTypeData = buf;
+		itemInfo.cch = sizeof(buf);
 
-	::SendMessage(hNpp, NPPM_MENUCOMMAND, 0, itemId);
+		if (!::GetMenuItemInfo(hNppFileMenu, recentID + i, false, &itemInfo))
+			continue;
+
+		if (!_tcscmp(buf, _menuStr))
+		{
+			foundItem = true;
+			itemID = recentID + i;
+			break;
+		}
+	}
+
+	if (foundItem)
+		::SendMessage(hNpp, NPPM_MENUCOMMAND, 0, itemID);
+	//else // something's wrong, recreate jump list - can't do it here, we're in rundll32 process right now.
+	//	ApplyJumpListSettings();
 }
 
 HWND FindNppWindow()
@@ -588,6 +608,9 @@ HWND FindNppWindow()
 
 void ApplyJumpListSettings()
 {
+	if (!inited)
+		return;
+
 	if (settings->enableJP)
 		CreateJumpList();
 	else
@@ -599,10 +622,10 @@ LRESULT CALLBACK NppHookCallWndRetProc(__in  int nCode, __in  WPARAM wParam, __i
 	if (nCode >= HC_ACTION)
 	{
 		CWPRETSTRUCT* retStruct = ((CWPRETSTRUCT*)lParam);
-		
+
 		if ((retStruct->message == NPPM_MENUCOMMAND) && (retStruct->lParam == IDM_CLEAN_RECENT_FILE_LIST)) // something (plugin) sent menu command
-			CreateJumpList();
-	}	
+			ApplyJumpListSettings();
+	}
 
 	return ::CallNextHookEx(0, nCode, wParam, lParam);
 }
@@ -612,10 +635,10 @@ LRESULT CALLBACK NppHookMessageProc(__in  int nCode, __in  WPARAM wParam, __in  
 	if (nCode >= HC_ACTION)
 	{
 		MSG* msg = ((MSG*)lParam);
-		
+
 		if ((msg->message == WM_COMMAND) && (LOWORD(msg->wParam) == IDM_CLEAN_RECENT_FILE_LIST)) // notepad++ menu command itself
-			::SendMessage(msg->hwnd, NPPM_MENUCOMMAND, 0, IDM_CLEAN_RECENT_FILE_LIST); // because at this stage menu hasn't been updated yet
-	}	
+			::SendMessage(msg->hwnd, NPPM_MENUCOMMAND, 0, IDM_CLEAN_RECENT_FILE_LIST); // because at this stage the menu hasn't been updated yet
+	}
 
 	return ::CallNextHookEx(0, nCode, wParam, lParam);
 }

@@ -1,8 +1,14 @@
-don't forget to check out settings (main menu -> plugins -> nppjumplist).
+Don't forget to check out settings (main menu -> plugins -> nppjumplist).
+If you already had Notepad++ pinned, you'll have to unpin old icon and pin the new one.
 
 -----------------------------------------------------------------------------------------
 changelog
 -----------------------------------------------------------------------------------------
+2011-01-22
+version 1.2.1
+- fixed bug: custom recent list's item may open wrong file if npp was closed.
+- fixed bug: crash/freeze on npp exit.
+
 2011-01-08
 version 1.2.0
 - added icons in jump list.
@@ -16,7 +22,7 @@ version 1.1.0
 version 1.0.1
 - added correct detection of plugins config folder.
 - fixed a bug when settings won't get saved sometimes.
-- fixed bug with moving tasks up/down in list.
+- fixed a bug with moving tasks up/down in list.
 - fixed "msvcp100.dll is missing" error.
 
 2010-12-07
