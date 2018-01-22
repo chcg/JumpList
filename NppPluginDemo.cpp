@@ -85,7 +85,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 		
 		if (   (notifyCode->nmhdr.code == NPPN_FILECLOSED)        // when these messages come,
 			//|| (notifyCode->nmhdr.code == NPPN_FILEBEFOREOPEN)    // it's possible that
-			|| (notifyCode->nmhdr.code == NPPN_FILEOPENED)        // recent list has been changed
+			|| (notifyCode->nmhdr.code == NPPN_FILEOPENED)        // recent list has changed
 			|| (notifyCode->nmhdr.code == NPPN_FILELOADFAILED) )  // 
 		{
 			if ((settings->enableJP) && (settings->showCustomRecent))

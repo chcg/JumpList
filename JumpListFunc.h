@@ -23,6 +23,7 @@
 //
 #include "PluginInterface.h"
 #include "SettingsManager.h"
+#include "resource.h"
 
 struct JPTaskProps
 {
@@ -30,6 +31,8 @@ struct JPTaskProps
 	WPARAM wParam;
 	LPARAM lParam;
 	std::basic_string<TCHAR> taskName;
+	std::basic_string<TCHAR> iconFilePath;
+	int iconResID;
 };
 
 typedef std::map<std::basic_string<TCHAR>, JPTaskProps> TAvailTasks;

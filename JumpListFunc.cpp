@@ -25,8 +25,12 @@ extern NppData nppData;
 
 const TCHAR MODE_TASK_CMD = TEXT('T');
 const TCHAR MODE_RECENT_CMD = TEXT('R');
+
 const UINT recentID = IDM_FILEMENU_LASTONE + 1; // ID of first recent files menu item
 const UINT recentMax = 30;
+
+TCHAR DEFAULT_ICON_PATH[MAX_PATH] = TEXT("");
+const int DEFAULT_ICON_RESID = 100; // npp main icon
 
 // this function will be called by jump list tasks via rundll32.exe. launches npp if it isn't running already.
 void CALLBACK ParseJPCmdW(HWND hwnd, HINSTANCE hinst, LPWSTR lpCmdLine, int nCmdShow);
@@ -47,7 +51,7 @@ HRESULT FillJumpListTasks(IObjectCollection* poc);
 
 // helper functions for those populators
 std::basic_string<TCHAR> GetDefArgsLine(TCHAR _mode);
-HRESULT CreateShellLink(PCTSTR _path, PCTSTR _arguments, PCTSTR _title, IShellLink **_ppsl);
+HRESULT CreateShellLink(PCTSTR _path, PCTSTR _arguments, PCTSTR _title, IShellLink **_ppsl, LPCTSTR _iconFilePath, int _iconIndex);
 bool IsLinkRemoved(PCTSTR _testStr, IObjectArray *_removedArr);
 
 // so they do
@@ -56,8 +60,7 @@ bool DestroyJumpList();
 
 // fill map of all possible jump list tasks (add new here)
 void FillAvailTasksMap();
-void AddAvailTask(LPCTSTR _taskName, LPCTSTR _cmdName, UINT _msg, WPARAM _wParam, LPARAM _lParam);
-
+void AddAvailTask(LPCTSTR _taskName, LPCTSTR _cmdName, UINT _msg, WPARAM _wParam, LPARAM _lParam, LPCTSTR _iconFilePath, int _iconResID);
 
 bool InitJumpList()
 {
@@ -66,11 +69,13 @@ bool InitJumpList()
 	if FAILED(hr)
 		return false;
 
-	hr = ::CoInitialize(NULL);
+	hr = ::CoInitializeEx(0, COINIT_APARTMENTTHREADED);
 
 	if FAILED(hr)
 		return false;
 	
+	::GetModuleFileName(NULL, DEFAULT_ICON_PATH, sizeof(DEFAULT_ICON_PATH));
+
 	FillAvailTasksMap();
 
 	return true;
@@ -256,6 +261,11 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 		}
 	}
 	
+	// TODO: get shell icons
+	// upd: 1. the most proper way is to just register npp as non-default handler for file types on "file opened" notification,
+	//      and use default recent list.
+	//      2. get hIcon's and save needed icons in tmp file. ugly.
+
 	for (std::map<int, int>::iterator it = menuPosToVecPos.begin(); it != menuPosToVecPos.end(); ++it)
     {
 		int vecPos = it->second;
@@ -263,10 +273,11 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
         if (IsLinkRemoved(recentFileNames[vecPos].c_str(), poaRemoved))
 			continue;
 		
-		hr = ::CreateShellLink(TEXT("rundll32"),
-							   (GetDefArgsLine(MODE_RECENT_CMD) + recentFileIDs[vecPos] /*+ TEXT(" ") + recentFileNames[i]*/ + TEXT(" \"") + recentFilePaths[vecPos] + TEXT("\"")).c_str(),
-							   recentFileNames[vecPos].c_str(),
-							   &psl);
+		hr = CreateShellLink(TEXT("rundll32"),
+							 (GetDefArgsLine(MODE_RECENT_CMD) + recentFileIDs[vecPos] + TEXT(" \"") + recentFilePaths[vecPos] + TEXT("\"")).c_str(),
+							 recentFileNames[vecPos].c_str(),
+							 &psl,
+							 DEFAULT_ICON_PATH, DEFAULT_ICON_RESID);
 
 		if (SUCCEEDED(hr))
 		{
@@ -293,13 +304,17 @@ HRESULT FillJumpListTasks(IObjectCollection* poc)
 {
 	HRESULT hr;
 	IShellLink * psl;
+	JPTaskProps taskProps;
 
 	for (int i = 0; i < settings->tasks.size(); ++i)
 	{
-		hr = ::CreateShellLink(TEXT("rundll32"),
-							   (GetDefArgsLine(MODE_TASK_CMD) + settings->tasks[i]).c_str(),
-							   availTasks[settings->tasks[i]].taskName.c_str(),
-							   &psl);
+		taskProps = availTasks[settings->tasks[i]];
+
+		hr = CreateShellLink(TEXT("rundll32"),
+							 (GetDefArgsLine(MODE_TASK_CMD) + settings->tasks[i]).c_str(),
+							 taskProps.taskName.c_str(),
+							 &psl,
+							 taskProps.iconFilePath.c_str(), taskProps.iconResID);
 
 		if (SUCCEEDED(hr))
 		{
@@ -311,53 +326,67 @@ HRESULT FillJumpListTasks(IObjectCollection* poc)
 	return 1;
 }
 
-HRESULT CreateShellLink(PCTSTR _path, PCTSTR _arguments, PCTSTR _title, IShellLink **_ppsl)
+HRESULT CreateShellLink(PCTSTR _path, PCTSTR _arguments, PCTSTR _title, IShellLink **_ppsl, LPCTSTR _iconFilePath, int _iconIndex)
 {
-    IShellLink *psl;
-    HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&psl));
+    IShellLink *psl = NULL;
+	IPropertyStore *pps = NULL;
+	PROPVARIANT propvar = {0};
 
-    if (SUCCEEDED(hr))
-    {
+    HRESULT hr = ::CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&psl));
+
+	__try
+	{
+		if (FAILED(hr))
+			return hr;
+
 		hr = psl->SetPath(_path);
-		
-        if (SUCCEEDED(hr))
-        {
-            hr = psl->SetArguments(_arguments);
-            if (SUCCEEDED(hr))
-            {
-                // The title property is required on Jump List items 
-                // provided as an IShellLink instance. This value is used 
-                // as the display name in the Jump List.
-                IPropertyStore *pps;
-                hr = psl->QueryInterface(IID_PPV_ARGS(&pps));
-                if (SUCCEEDED(hr))
-                {
-                    PROPVARIANT propvar;
-                    hr = InitPropVariantFromString(_title, &propvar);
-                    if (SUCCEEDED(hr))
-                    {
-                        hr = pps->SetValue(PKEY_Title, propvar);
-                        if (SUCCEEDED(hr))
-                        {
-                            hr = pps->Commit();
-                            if (SUCCEEDED(hr))
-                            {
-                                hr = psl->QueryInterface(IID_PPV_ARGS(_ppsl));
-                            }
-                        }
-                        PropVariantClear(&propvar);
-                    }
-                    pps->Release();
-                }
-            }
-        }
-        else
-        {
-            hr = HRESULT_FROM_WIN32(GetLastError());
-        }
 
-        psl->Release();
-    }
+		if (FAILED(hr))
+			return hr;
+
+		hr = psl->SetArguments(_arguments);
+
+		if (FAILED(hr))
+			return hr;
+
+		hr = psl->SetIconLocation(_iconFilePath, -_iconIndex); // minus sign means it's resource id
+
+		if (FAILED(hr))
+			return hr;
+
+		hr = psl->QueryInterface(IID_PPV_ARGS(&pps));
+
+		if (FAILED(hr))
+			return hr;
+ 
+		hr = ::InitPropVariantFromString(_title, &propvar);
+
+		if (FAILED(hr))
+			return hr;
+
+		hr = pps->SetValue(PKEY_Title, propvar);
+
+		if (FAILED(hr))
+			return hr;
+
+		hr = pps->Commit();
+
+		if (FAILED(hr))
+			return hr;
+
+		hr = psl->QueryInterface(IID_PPV_ARGS(_ppsl));
+	}
+	__finally
+	{
+		if (pps != NULL)
+			pps->Release();
+
+		if (psl != NULL)
+			psl->Release();
+		
+		if (propvar.vt != VT_EMPTY)
+			::PropVariantClear(&propvar);
+	}
 
     return hr;
 }
@@ -365,29 +394,41 @@ HRESULT CreateShellLink(PCTSTR _path, PCTSTR _arguments, PCTSTR _title, IShellLi
 void FillAvailTasksMap()
 {
 	availTasks.clear();
-	
-	//----------| Task Name -----------------------| Command Name -------------| Message --------------| wParam -------| lParam -----------------------|
-	AddAvailTask( TEXT("New file"),					TEXT("newfile"),			NPPM_MENUCOMMAND,		0,				IDM_FILE_NEW					);
-	AddAvailTask( TEXT("Save all"),					TEXT("saveall"),			NPPM_SAVEALLFILES,		0,				0								);
-	AddAvailTask( TEXT("Close all"),				TEXT("closeall"),			NPPM_MENUCOMMAND,		0,				IDM_FILE_CLOSEALL				);
-	AddAvailTask( TEXT("Open all recent"),			TEXT("openallrecent"),		NPPM_MENUCOMMAND,		0,				IDM_OPEN_ALL_RECENT_FILE		);
-	AddAvailTask( TEXT("Open file"),				TEXT("openfile"),			NPPM_MENUCOMMAND,		0,				IDM_FILE_OPEN					);
-	AddAvailTask( TEXT("Reload from disk"),			TEXT("reloadfromdisk"),		NPPM_MENUCOMMAND,		0,				IDM_FILE_RELOAD					);
-	AddAvailTask( TEXT("Save file"),				TEXT("savefile"),			NPPM_MENUCOMMAND,		0,				IDM_FILE_SAVE					);
-	AddAvailTask( TEXT("Save file as"),				TEXT("saveas"),				NPPM_MENUCOMMAND,		0,				IDM_FILE_SAVEAS					);
-	AddAvailTask( TEXT("Save a copy as"),			TEXT("savecopyas"),			NPPM_MENUCOMMAND,		0,				IDM_FILE_SAVECOPYAS				);
-	AddAvailTask( TEXT("Close file"),				TEXT("closefile"),			NPPM_MENUCOMMAND,		0,				IDM_FILE_CLOSE					);
-	AddAvailTask( TEXT("Close all but active"),		TEXT("closeallbutactive"),	NPPM_MENUCOMMAND,		0,				IDM_FILE_CLOSEALL_BUT_CURRENT	);
-	AddAvailTask( TEXT("Delete from disk"),			TEXT("deletefromdisk"),		NPPM_MENUCOMMAND,		0,				IDM_FILE_DELETE					);
-	AddAvailTask( TEXT("Load session"),				TEXT("loadsession"),		NPPM_MENUCOMMAND,		0,				IDM_FILE_LOADSESSION			);
-	AddAvailTask( TEXT("Save session"),				TEXT("savesession"),		NPPM_MENUCOMMAND,		0,				IDM_FILE_SAVESESSION			);
-	AddAvailTask( TEXT("Print file"),				TEXT("printfile"),			NPPM_MENUCOMMAND,		0,				IDM_FILE_PRINT					);
-	AddAvailTask( TEXT("Print file now"),			TEXT("printnow"),			NPPM_MENUCOMMAND,		0,				IDM_FILE_PRINTNOW				);
-	AddAvailTask( TEXT("Empty recent files list"),	TEXT("emptyrecentlist"),	NPPM_MENUCOMMAND,		0,				IDM_CLEAN_RECENT_FILE_LIST		);
-	//----------| Task Name -----------------------| Command Name -------------| Message --------------| wParam -------| lParam -----------------------|
+
+	TCHAR dllPath[MAX_PATH] = TEXT("");
+	::GetModuleFileName(dllInstance, dllPath, sizeof(dllPath));
+
+	PWSTR sysDir;
+	TCHAR shellDllPath[MAX_PATH] = TEXT("");
+	if (SUCCEEDED(::SHGetKnownFolderPath(FOLDERID_System, 0, NULL, &sysDir)))
+	{
+		_tcscat(shellDllPath, sysDir);
+		_tcscat(shellDllPath, TEXT("\\shell32.dll"));
+		::CoTaskMemFree(sysDir);
+	}
+
+	//----------| Task Name ------------------------| Command Name -------------| Message --------------| wParam ---| lParam -----------------------| Icon File Path ---| Icon Resource ID -|
+	AddAvailTask( TEXT("New file")					, TEXT("newfile")			, NPPM_MENUCOMMAND		, 0			, IDM_FILE_NEW					, dllPath			, IDI_ICON_NEWFILE	);
+	AddAvailTask( TEXT("Save all")					, TEXT("saveall")			, NPPM_SAVEALLFILES		, 0			, 0								, dllPath			, IDI_ICON_SAVEALL	);
+	AddAvailTask( TEXT("Close all")					, TEXT("closeall")			, NPPM_MENUCOMMAND		, 0			, IDM_FILE_CLOSEALL				, dllPath			, IDI_ICON_CLOSEALL	);
+	AddAvailTask( TEXT("Open all recent")			, TEXT("openallrecent")		, NPPM_MENUCOMMAND		, 0			, IDM_OPEN_ALL_RECENT_FILE		, dllPath			, IDI_ICON_OPENFILE	);
+	AddAvailTask( TEXT("Open file")					, TEXT("openfile")			, NPPM_MENUCOMMAND		, 0			, IDM_FILE_OPEN					, dllPath			, IDI_ICON_OPENFILE	);
+	AddAvailTask( TEXT("Reload from disk")			, TEXT("reloadfromdisk")	, NPPM_MENUCOMMAND		, 0			, IDM_FILE_RELOAD				, shellDllPath		, 16739				);
+	AddAvailTask( TEXT("Save file")					, TEXT("savefile")			, NPPM_MENUCOMMAND		, 0			, IDM_FILE_SAVE					, dllPath			, IDI_ICON_SAVEFILE	);
+	AddAvailTask( TEXT("Save file as")				, TEXT("saveas")			, NPPM_MENUCOMMAND		, 0			, IDM_FILE_SAVEAS				, dllPath			, IDI_ICON_SAVEFILE	);
+	AddAvailTask( TEXT("Save a copy as")			, TEXT("savecopyas")		, NPPM_MENUCOMMAND		, 0			, IDM_FILE_SAVECOPYAS			, dllPath			, IDI_ICON_SAVEFILE	);
+	AddAvailTask( TEXT("Close file")				, TEXT("closefile")			, NPPM_MENUCOMMAND		, 0			, IDM_FILE_CLOSE				, dllPath			, IDI_ICON_CLOSEFILE);
+	AddAvailTask( TEXT("Close all but active")		, TEXT("closeallbutactive")	, NPPM_MENUCOMMAND		, 0			, IDM_FILE_CLOSEALL_BUT_CURRENT	, dllPath			, IDI_ICON_CLOSEALL	);
+	AddAvailTask( TEXT("Delete from disk")			, TEXT("deletefromdisk")	, NPPM_MENUCOMMAND		, 0			, IDM_FILE_DELETE				, shellDllPath   	, 240               );
+	AddAvailTask( TEXT("Load session")				, TEXT("loadsession")		, NPPM_MENUCOMMAND		, 0			, IDM_FILE_LOADSESSION			, dllPath			, IDI_ICON_OPENFILE	);
+	AddAvailTask( TEXT("Save session")				, TEXT("savesession")		, NPPM_MENUCOMMAND		, 0			, IDM_FILE_SAVESESSION			, dllPath			, IDI_ICON_SAVEFILE	);
+	AddAvailTask( TEXT("Print file")				, TEXT("printfile")			, NPPM_MENUCOMMAND		, 0			, IDM_FILE_PRINT				, dllPath			, IDI_ICON_PRINTNOW	);
+	AddAvailTask( TEXT("Print file now")			, TEXT("printnow")			, NPPM_MENUCOMMAND		, 0			, IDM_FILE_PRINTNOW				, dllPath			, IDI_ICON_PRINTNOW	);
+	AddAvailTask( TEXT("Empty recent files list")	, TEXT("emptyrecentlist")	, NPPM_MENUCOMMAND		, 0			, IDM_CLEAN_RECENT_FILE_LIST	, shellDllPath   	, 261               );
+	//----------| Task Name ------------------------| Command Name -------------| Message --------------| wParam ---| lParam -----------------------| Icon File Path ---| Icon Resource ID -|
 }
 
-void AddAvailTask(LPCTSTR _taskName, LPCTSTR _cmdName, UINT _msg, WPARAM _wParam, LPARAM _lParam)
+void AddAvailTask(LPCTSTR _taskName, LPCTSTR _cmdName, UINT _msg, WPARAM _wParam, LPARAM _lParam, LPCTSTR _iconFilePath, int _iconResID)
 {
 	JPTaskProps tmpTaskProps;
 	
@@ -395,6 +436,8 @@ void AddAvailTask(LPCTSTR _taskName, LPCTSTR _cmdName, UINT _msg, WPARAM _wParam
 	tmpTaskProps.msg = _msg;
 	tmpTaskProps.wParam = _wParam;
 	tmpTaskProps.lParam = _lParam;
+	tmpTaskProps.iconFilePath = _iconFilePath;
+	tmpTaskProps.iconResID = _iconResID;
 	availTasks.insert(TAvailTasks::value_type(_cmdName, tmpTaskProps));
 }
 
@@ -613,7 +656,7 @@ std::basic_string<TCHAR> GetDefArgsLine(TCHAR _mode)
 	TCHAR path[MAX_PATH];
 
 	// first append NppJumpList.dll path
-	::GetModuleFileName(dllInstance, path, sizeof(path)-1);
+	::GetModuleFileName(dllInstance, path, sizeof(path));
 		
 	cmdLine = TEXT("\"");
 	cmdLine += path;

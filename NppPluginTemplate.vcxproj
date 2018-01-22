@@ -72,7 +72,7 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'">bin\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">C:\Program Files %28x86%29\Notepad++\plugins</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">true</LinkIncremental>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='ANSI Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
@@ -89,6 +89,8 @@
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'" />
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'">NppJumpList</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ANSI Release|Win32'">NppJumpList</TargetName>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'">true</GenerateManifest>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">NppJumpList</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ANSI Debug|Win32'">
     <ClCompile>
@@ -171,6 +173,7 @@
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
       <Version>
       </Version>
+      <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).intermediate.manifest</ManifestFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">
@@ -188,7 +191,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)NppPluginTemplate_Debug.dll</OutputFile>
+      <OutputFile>$(OutDir)NppJumpList.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)NppPluginTemplate.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -249,6 +252,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
+    <None Include="icons\closeAll.ico" />
+    <None Include="icons\closeFile.ico" />
+    <None Include="icons\newFile.ico" />
+    <None Include="icons\openFile.ico" />
+    <None Include="icons\print.ico" />
+    <None Include="icons\saveAll.ico" />
+    <None Include="icons\saveFile.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="NppJumpList.dll.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

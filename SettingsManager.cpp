@@ -25,10 +25,10 @@ SettingsManager::SettingsManager(LPCTSTR _iniPath)
 
 	// default settings
 	enableJP = true;
-	showDefRecent = true;
+	showDefRecent = false;
 	showTasks = true;
 	showDefFrequent = false;
-	showCustomRecent = false;
+	showCustomRecent = true;
 
 	tasks.clear();
 	tasks.push_back(TEXT("newfile"));

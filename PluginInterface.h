@@ -27,6 +27,10 @@
 #include <Shobjidl.h>
 #include <Propvarutil.h>
 #include <Propkey.h>
+#include <commoncontrols.h>
+#include <assert.h>
+#include <ShlObj.h>
+#include <comdef.h>
 #include <map>
 #include <string>
 #include <vector>

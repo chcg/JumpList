@@ -78,8 +78,30 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="exports.def">
-      <Filter>Source Files</Filter>
+    <None Include="exports.def" />
+    <None Include="icons\closeAll.ico">
+      <Filter>Resource Files</Filter>
     </None>
+    <None Include="icons\closeFile.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="icons\newFile.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="icons\openFile.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="icons\print.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="icons\saveAll.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="icons\saveFile.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="NppJumpList.dll.manifest" />
   </ItemGroup>
 </Project>
