@@ -43,6 +43,8 @@
 #include "menuCmdID.h"
 #endif
 
+typedef std::basic_string<TCHAR> tstring;
+
 const int nbChar = 64;
 
 typedef const TCHAR * (__cdecl * PFUNCGETNAME)();

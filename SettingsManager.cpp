@@ -27,6 +27,8 @@ SettingsManager::SettingsManager(LPCTSTR _iniPath)
 	enableJP = true;
 	showDefRecent = true;
 	showTasks = true;
+	showDefFrequent = false;
+	showCustomRecent = false;
 
 	tasks.clear();
 	tasks.push_back(TEXT("newfile"));
@@ -45,6 +47,8 @@ void SettingsManager::Load() // assumes that the default settings are set
 	IniReadBool(TEXT("Main"), TEXT("EnableJP"), enableJP);
 	IniReadBool(TEXT("Main"), TEXT("ShowDefRecent"), showDefRecent);
 	IniReadBool(TEXT("Main"), TEXT("ShowTasks"), showTasks);
+	IniReadBool(TEXT("Main"), TEXT("ShowDefFrequent"), showDefFrequent);
+	IniReadBool(TEXT("Main"), TEXT("ShowCustomRecent"), showCustomRecent);
 
 	TCHAR strNum[64];
 	int i = 0;
@@ -52,7 +56,7 @@ void SettingsManager::Load() // assumes that the default settings are set
 	
 	while (IniReadString(TEXT("Tasks"), _itot(i, strNum, 10), tmpStr))
 	{
-		// since there are saved tasks then first delete default ones
+		// since there are saved tasks then delete default ones in first iteration
 		if (!i)
 			tasks.clear();
 
@@ -69,6 +73,8 @@ void SettingsManager::Save()
 	IniWriteBool(TEXT("Main"), TEXT("EnableJP"), enableJP);
 	IniWriteBool(TEXT("Main"), TEXT("ShowDefRecent"), showDefRecent);
 	IniWriteBool(TEXT("Main"), TEXT("ShowTasks"), showTasks);
+	IniWriteBool(TEXT("Main"), TEXT("ShowDefFrequent"), showDefFrequent);
+	IniWriteBool(TEXT("Main"), TEXT("ShowCustomRecent"), showCustomRecent);
 	
 	TCHAR sectionStr[65536] = {0}, strNum[64];
 

@@ -62,6 +62,8 @@ INT_PTR CALLBACK JPFormProc(HWND _hDlg, UINT uMessage, WPARAM wParam, LPARAM lPa
 		case IDC_ENABLEJP_CB:
 		case IDC_DEF_RECENT_CB:
 		case IDC_TASKS_CB:
+		case IDC_DEF_FREQUENT_CB:
+		case IDC_CUSTOM_RECENT_CB:
 			{
 				settingsChanged = true;
 				break;
@@ -121,9 +123,11 @@ INT_PTR CALLBACK JPFormProc(HWND _hDlg, UINT uMessage, WPARAM wParam, LPARAM lPa
 
 		// reset controls state according to current settings
 
-		::CheckDlgButton(hDlg, IDC_ENABLEJP_CB,		settings->enableJP		? BST_CHECKED : BST_UNCHECKED);
-		::CheckDlgButton(hDlg, IDC_DEF_RECENT_CB,	settings->showDefRecent	? BST_CHECKED : BST_UNCHECKED);
-		::CheckDlgButton(hDlg, IDC_TASKS_CB,		settings->showTasks		? BST_CHECKED : BST_UNCHECKED);
+		::CheckDlgButton(hDlg, IDC_ENABLEJP_CB,			settings->enableJP			? BST_CHECKED : BST_UNCHECKED);
+		::CheckDlgButton(hDlg, IDC_DEF_RECENT_CB,		settings->showDefRecent		? BST_CHECKED : BST_UNCHECKED);
+		::CheckDlgButton(hDlg, IDC_TASKS_CB,			settings->showTasks			? BST_CHECKED : BST_UNCHECKED);
+		::CheckDlgButton(hDlg, IDC_DEF_FREQUENT_CB,		settings->showDefFrequent	? BST_CHECKED : BST_UNCHECKED);
+		::CheckDlgButton(hDlg, IDC_CUSTOM_RECENT_CB,	settings->showCustomRecent	? BST_CHECKED : BST_UNCHECKED);
 
 		availIndex.clear();
 
@@ -177,9 +181,11 @@ INT_PTR CALLBACK JPFormProc(HWND _hDlg, UINT uMessage, WPARAM wParam, LPARAM lPa
 
 void UserInputToSettings()
 {
-	GetCheckBoxValue(IDC_ENABLEJP_CB,	settings->enableJP);
-	GetCheckBoxValue(IDC_DEF_RECENT_CB,	settings->showDefRecent);
-	GetCheckBoxValue(IDC_TASKS_CB,		settings->showTasks);
+	GetCheckBoxValue(IDC_ENABLEJP_CB,		settings->enableJP);
+	GetCheckBoxValue(IDC_DEF_RECENT_CB,		settings->showDefRecent);
+	GetCheckBoxValue(IDC_TASKS_CB,			settings->showTasks);
+	GetCheckBoxValue(IDC_DEF_FREQUENT_CB,	settings->showDefFrequent);
+	GetCheckBoxValue(IDC_CUSTOM_RECENT_CB,	settings->showCustomRecent);
 
 	settings->tasks.clear();
 

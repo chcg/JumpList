@@ -47,7 +47,6 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC70.props" />
-    <Import Project="no_ms_shit.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -56,12 +55,10 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ANSI Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC70.props" />
-    <Import Project="no_ms_shit.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ANSI Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC70.props" />
-    <Import Project="no_ms_shit.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -69,8 +66,8 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ANSI Debug|Win32'">$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='ANSI Debug|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ANSI Debug|Win32'">true</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='ANSI Release|Win32'">.\bin\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ANSI Release|Win32'">Release\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='ANSI Release|Win32'">bin\Ansi\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ANSI Release|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ANSI Release|Win32'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'">bin\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'">$(Configuration)\</IntDir>
@@ -91,6 +88,7 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'" />
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Unicode Realeas|Win32'">NppJumpList</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='ANSI Release|Win32'">NppJumpList</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ANSI Debug|Win32'">
     <ClCompile>
@@ -189,7 +187,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)NppPluginTemplate_Debug.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)NppPluginTemplate.pdb</ProgramDatabaseFile>

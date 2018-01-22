@@ -19,6 +19,7 @@
 
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
+extern SettingsManager *settings;
 HINSTANCE dllInstance = NULL;
 
 
@@ -34,9 +35,18 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 		break;
 
       case DLL_PROCESS_DETACH:
-		commandMenuCleanUp();
-        pluginCleanUp();
-        break;
+		  {
+			// clean up only if dll was loaded by notepad++
+			TCHAR procPath[MAX_PATH] = {0};
+			::GetModuleFileName(NULL, procPath, sizeof(procPath)-1);
+			
+			if (_tcsicmp(::PathFindFileName(procPath), TEXT("rundll32.exe")))
+			{
+				commandMenuCleanUp();
+				pluginCleanUp();
+			}
+			break;
+		  }
 
       case DLL_THREAD_ATTACH:
         break;
@@ -53,12 +63,6 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
 	nppData = notpadPlusData;
 	commandMenuInit();
-
-	//TCHAR procPath[MAX_PATH] = {0};
-	//::GetModuleFileName(NULL, procPath, sizeof(procPath)-1);
-	
-	//if (_tcsicmp(PathFindFileName(procPath), TEXT("rundll32.exe")) != 0)
-	pluginInit();
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -74,6 +78,20 @@ extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *nbF)
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
+	if (notifyCode->nmhdr.hwndFrom == nppData._nppHandle)
+	{
+		if (notifyCode->nmhdr.code == NPPN_TBMODIFICATION) // this message comes after main menu recent list is formed
+			pluginInit();
+		
+		if (   (notifyCode->nmhdr.code == NPPN_FILECLOSED)        // when these messages come,
+			//|| (notifyCode->nmhdr.code == NPPN_FILEBEFOREOPEN)    // it's possible that
+			|| (notifyCode->nmhdr.code == NPPN_FILEOPENED)        // recent list has been changed
+			|| (notifyCode->nmhdr.code == NPPN_FILELOADFAILED) )  // 
+		{
+			if ((settings->enableJP) && (settings->showCustomRecent))
+				ApplyJumpListSettings();
+		}
+	}
 }
 
 

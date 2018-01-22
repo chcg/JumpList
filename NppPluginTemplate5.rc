@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,1,0,0
+ PRODUCTVERSION 1,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "ahv"
             VALUE "FileDescription", "Notepad++ plugin"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileVersion", "1.1.0.0"
             VALUE "InternalName", "NppJumpList"
             VALUE "LegalCopyright", "Copyright (C) 2010"
             VALUE "OriginalFilename", "NppJumpList.dll"
             VALUE "ProductName", "NppJumpList"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", "1.1.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -99,15 +99,15 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_JPForm DIALOGEX 0, 0, 298, 220
+IDD_JPForm DIALOGEX 0, 0, 298, 254
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "NppJumpList Settings"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    PUSHBUTTON      "OK",IDOK,94,193,50,14
+    PUSHBUTTON      "OK",IDOK,94,232,50,14
     LISTBOX         IDC_LIST_TSK_AVAIL,22,49,98,102,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Tasks",IDC_STATIC,15,27,267,131
-    PUSHBUTTON      "Cancel",IDCANCEL,151,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,151,232,50,14
     LTEXT           "Shown tasks",IDC_STATIC,152,39,41,8
     LTEXT           "Available tasks",IDC_STATIC,22,39,48,8
     PUSHBUTTON      "<",IDC_BUT_DEL_TSK,125,58,22,19
@@ -117,10 +117,13 @@ BEGIN
     LISTBOX         IDC_LIST_TSK_SHOWN,152,49,98,102,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "",IDC_BUT_UP_TSK,254,78,22,19
     PUSHBUTTON      "",IDC_BUT_DOWN_TSK,254,98,22,19
-    GROUPBOX        "Visibility",IDC_STATIC,15,160,267,27
+    GROUPBOX        "Visibility",IDC_STATIC,15,160,267,66
     CONTROL         "Default recent list",IDC_DEF_RECENT_CB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,171,73,10
-    CONTROL         "Tasks",IDC_TASKS_CB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,100,171,34,10
+    CONTROL         "Tasks",IDC_TASKS_CB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,197,34,10
     CONTROL         "Enable NppJumpList",IDC_ENABLEJP_CB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,14,79,10
+    CONTROL         "Default frequent list",IDC_DEF_FREQUENT_CB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,184,80,10
+    CONTROL         "Custom recent list",IDC_CUSTOM_RECENT_CB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,210,73,10
+    LTEXT           "Note: default lists work only for file types associated with Notepad++",IDC_STATIC,163,169,113,25
 END
 
 IDD_AboutDlg DIALOGEX 0, 0, 167, 96
@@ -147,7 +150,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 290
         TOPMARGIN, 7
-        BOTTOMMARGIN, 213
+        BOTTOMMARGIN, 247
     END
 
     IDD_AboutDlg, DIALOG

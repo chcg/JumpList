@@ -33,7 +33,9 @@ private:
 public:
 	bool enableJP
 		,showDefRecent
-		,showTasks;
+		,showTasks
+		,showCustomRecent
+		,showDefFrequent;
 
 	std::vector<std::basic_string<TCHAR> > tasks;
 

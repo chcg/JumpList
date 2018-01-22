@@ -14,8 +14,10 @@
 #define IDC_BUT_DOWN_TSK                1013
 #define IDC_DEF_RECENT_CB               1015
 #define IDC_TASKS_CB                    1016
+#define IDC_DEF_FREQUENT_CB             1017
 #define IDC_ENABLEJP_CB                 1018
 #define IDC_BUILD_INFO                  1019
+#define IDC_CUSTOM_RECENT_CB            1020
 
 // Next default values for new objects
 // 
