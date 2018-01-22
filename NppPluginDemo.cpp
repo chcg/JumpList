@@ -107,6 +107,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 //
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	if ((Message ==	NPPM_MSGTOPLUGIN) && (lParam == (LPARAM)1))
+		ApplyJumpListSettings();
+	
 	return TRUE;
 }
 

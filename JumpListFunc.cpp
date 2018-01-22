@@ -35,6 +35,8 @@ const int DEFAULT_ICON_RESID = 100; // npp main icon
 
 bool initedCOM = false, inited = false;
 
+TCHAR DLL_NAME[MAX_PATH] = {0};
+
 // this function will be called by jump list tasks via rundll32.exe. launches npp if it isn't running already.
 void CALLBACK ParseJPCmdW(HWND hwnd, HINSTANCE hinst, LPWSTR lpCmdLine, int nCmdShow);
 // send jump list commands to npp
@@ -77,6 +79,10 @@ bool InitJumpList()
 	initedCOM = SUCCEEDED(::CoInitializeEx(0, COINIT_APARTMENTTHREADED));
 
 	::GetModuleFileName(NULL, DEFAULT_ICON_PATH, sizeof(DEFAULT_ICON_PATH));
+
+	TCHAR dllPath[MAX_PATH];
+	::GetModuleFileName(dllInstance, dllPath, sizeof(dllPath));
+	_tcscpy(DLL_NAME, ::PathFindFileName(dllPath));
 
 	FillAvailTasksMap();
 
@@ -212,7 +218,7 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 	recentFileIDs.clear();
 	menuPosToVecPos.clear();
 	
-	for (int i = 0; i < recentMax; ++i)
+	for (UINT i = 0; i < recentMax; ++i)
 	{
 		TCHAR buf[1024] = {0};
 		tstring numStr = TEXT("");
@@ -276,14 +282,16 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 	//      2. get hIcon's and save needed icons in tmp file. ugly and not always correct.
 
 	for (std::map<int, int>::iterator it = menuPosToVecPos.begin(); it != menuPosToVecPos.end(); ++it)
-    {
+	{
 		int vecPos = it->second;
 
-        if (IsLinkRemoved(recentFileNames[vecPos].c_str(), poaRemoved))
+		tstring linkStr = GetDefArgsLine(MODE_RECENT_CMD) + recentFileIDs[vecPos] + TEXT(" \"") + recentFilePaths[vecPos] + TEXT("\"");
+
+        if (IsLinkRemoved(linkStr.c_str(), poaRemoved))
 			continue;
 		
 		hr = CreateShellLink(TEXT("rundll32"),
-							 (GetDefArgsLine(MODE_RECENT_CMD) + recentFileIDs[vecPos] + TEXT(" \"") + recentFilePaths[vecPos] + TEXT("\"")).c_str(),
+							 linkStr.c_str(),
 							 recentFileNames[vecPos].c_str(),
 							 &psl,
 							 DEFAULT_ICON_PATH, DEFAULT_ICON_RESID);
@@ -571,7 +579,7 @@ void SendNppRecentCmd(LPTSTR _idStr, LPTSTR _menuStr)
 
 	if (foundItem)
 		::SendMessage(hNpp, NPPM_MENUCOMMAND, 0, itemID);
-	//else // something's wrong, recreate jump list - can't do it here, we're in rundll32 process right now.
+	//else // TODO: something's wrong, recreate jump list - can't do it here, we're in rundll32 process right now.
 	//	ApplyJumpListSettings();
 }
 
@@ -623,7 +631,13 @@ LRESULT CALLBACK NppHookCallWndRetProc(__in  int nCode, __in  WPARAM wParam, __i
 	{
 		CWPRETSTRUCT* retStruct = ((CWPRETSTRUCT*)lParam);
 
-		if ((retStruct->message == NPPM_MENUCOMMAND) && (retStruct->lParam == IDM_CLEAN_RECENT_FILE_LIST)) // something (plugin) sent menu command
+		// something (plugin) sent menu command
+		if ((retStruct->message == NPPM_MENUCOMMAND) && (retStruct->lParam == IDM_CLEAN_RECENT_FILE_LIST))
+			ApplyJumpListSettings();
+
+		// something is opening file via menu command or someone is opening file via custom jump list
+		// this is needed for correct custom jump list in case file can't be opened
+		if ((retStruct->message == NPPM_MENUCOMMAND) && (retStruct->lParam > IDM_FILEMENU_LASTONE) && (retStruct->lParam < (IDM_FILEMENU_LASTONE + recentMax)))
 			ApplyJumpListSettings();
 	}
 
@@ -636,8 +650,14 @@ LRESULT CALLBACK NppHookMessageProc(__in  int nCode, __in  WPARAM wParam, __in  
 	{
 		MSG* msg = ((MSG*)lParam);
 
-		if ((msg->message == WM_COMMAND) && (LOWORD(msg->wParam) == IDM_CLEAN_RECENT_FILE_LIST)) // notepad++ menu command itself
-			::SendMessage(msg->hwnd, NPPM_MENUCOMMAND, 0, IDM_CLEAN_RECENT_FILE_LIST); // because at this stage the menu hasn't been updated yet
+		// notepad++ menu commands themselfes
+		// PostMessage because at this stage the menu hasn't been updated yet
+
+		if ((msg->message == WM_COMMAND) && (LOWORD(msg->wParam) == IDM_CLEAN_RECENT_FILE_LIST))
+			::PostMessage(nppData._nppHandle, NPPM_MSGTOPLUGIN, (WPARAM)DLL_NAME, (LPARAM)1);
+
+		if ((msg->message == WM_COMMAND) && (LOWORD(msg->wParam) > IDM_FILEMENU_LASTONE) && (LOWORD(msg->wParam) < (IDM_FILEMENU_LASTONE + recentMax)))
+			::PostMessage(nppData._nppHandle, NPPM_MSGTOPLUGIN, (WPARAM)DLL_NAME, (LPARAM)1);
 	}
 
 	return ::CallNextHookEx(0, nCode, wParam, lParam);
@@ -680,7 +700,7 @@ std::basic_string<TCHAR> GetDefArgsLine(TCHAR _mode)
 
 	// first append NppJumpList.dll path
 	::GetModuleFileName(dllInstance, path, sizeof(path));
-		
+
 	cmdLine = TEXT("\"");
 	cmdLine += path;
 	cmdLine += TEXT("\",ParseJPCmd ");
@@ -697,7 +717,7 @@ std::basic_string<TCHAR> GetDefArgsLine(TCHAR _mode)
 	cmdLine += path;
 	cmdLine += TEXT("\" ");
 	
-	// final mode specific arguments get appended someplace else
+	// final mode specific arguments get appended somewhere else
 	
 	return cmdLine;
 }

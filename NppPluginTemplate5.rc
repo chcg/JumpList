@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,1,0
- PRODUCTVERSION 1,2,1,0
+ FILEVERSION 1,2,2,0
+ PRODUCTVERSION 1,2,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "ahv"
             VALUE "FileDescription", "Notepad++ plugin"
-            VALUE "FileVersion", "1.2.1.0"
+            VALUE "FileVersion", "1.2.2.0"
             VALUE "InternalName", "NppJumpList"
             VALUE "LegalCopyright", "Copyright (C) 2010"
             VALUE "OriginalFilename", "NppJumpList.dll"
             VALUE "ProductName", "NppJumpList"
-            VALUE "ProductVersion", "1.2.1.0"
+            VALUE "ProductVersion", "1.2.2.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -146,7 +146,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About NppJumpList"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Copyright © ahv, 2010\r\nSend feedback to <ahvsevolod@ya.ru>\r\n\r\nThanks to authors of Notepad++ and plugins\r\n(NppExec and Compare in particular)",IDC_STATIC,7,28,153,41
+    LTEXT           "Copyright © ahv, 2010-2011\r\nSend feedback to <ahvsevolod@ya.ru>\r\n\r\nThanks to authors of Notepad++ and plugins\r\n(NppExec and Compare in particular)",IDC_STATIC,7,28,153,41
     PUSHBUTTON      "OK",IDOK,59,74,50,14
     LTEXT           "Static",IDC_BUILD_INFO,7,7,153,19
 END

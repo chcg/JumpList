@@ -21,6 +21,7 @@
 //
 // All definitions of plugin interface
 //
+
 #include "PluginInterface.h"
 #include "SettingsManager.h"
 #include "resource.h"

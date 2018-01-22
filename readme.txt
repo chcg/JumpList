@@ -1,9 +1,15 @@
 Don't forget to check out settings (main menu -> plugins -> nppjumplist).
 If you already had Notepad++ pinned, you'll have to unpin old icon and pin the new one.
+If you want to revert back to default jump list, you need to uncheck "Enable NppJumpList" in the settings. Just removing the plugin won't do it.
 
 -----------------------------------------------------------------------------------------
 changelog
 -----------------------------------------------------------------------------------------
+2011-05-09
+version 1.2.2
+tested with Notepad++ 5.9.
+- a couple of bug fixes for custom recent list.
+
 2011-01-22
 version 1.2.1
 - fixed bug: custom recent list's item may open wrong file if npp was closed.
