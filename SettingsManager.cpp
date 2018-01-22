@@ -78,9 +78,9 @@ void SettingsManager::Save()
 	
 	TCHAR sectionStr[65536] = {0}, strNum[64];
 
-	for (int i = 0; i < tasks.size(); ++i)
+	for (size_t i = 0; i < tasks.size(); ++i)
 	{
-		_tcscat(sectionStr, _itot(i, strNum, 10));
+		_tcscat(sectionStr, _itot(static_cast<int>(i), strNum, 10));
 		_tcscat(sectionStr, TEXT("="));
 		_tcscat(sectionStr, tasks[i].c_str());
 		_tcscat(sectionStr, TEXT("\r\n\0"));
@@ -105,7 +105,7 @@ bool SettingsManager::IniReadBool(LPTSTR _section, LPTSTR _key, bool &_var)
 {
 	TCHAR retStr[64];
 	
-	::GetPrivateProfileString(_section, _key, TEXT("INI_ERROR_DEFAULT_VALUE"), retStr, sizeof(retStr), iniPath.c_str());
+	::GetPrivateProfileString(_section, _key, TEXT("INI_ERROR_DEFAULT_VALUE"), retStr, ARRAYSIZE(retStr), iniPath.c_str());
 	
 	if (_tcscmp(retStr, TEXT("INI_ERROR_DEFAULT_VALUE")) == 0)
 		return false;
@@ -124,7 +124,7 @@ bool SettingsManager::IniReadString(LPTSTR _section, LPTSTR _key, std::basic_str
 {
 	TCHAR retStr[64];
 	
-	::GetPrivateProfileString(_section, _key, TEXT("INI_ERROR_DEFAULT_VALUE"), retStr, sizeof(retStr), iniPath.c_str());
+	::GetPrivateProfileString(_section, _key, TEXT("INI_ERROR_DEFAULT_VALUE"), retStr, ARRAYSIZE(retStr), iniPath.c_str());
 	
 	if (_tcscmp(retStr, TEXT("INI_ERROR_DEFAULT_VALUE")) == 0)
 		return false;

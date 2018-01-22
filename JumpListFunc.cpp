@@ -78,10 +78,10 @@ bool InitJumpList()
 
 	initedCOM = SUCCEEDED(::CoInitializeEx(0, COINIT_APARTMENTTHREADED));
 
-	::GetModuleFileName(NULL, DEFAULT_ICON_PATH, sizeof(DEFAULT_ICON_PATH));
+	::GetModuleFileName(NULL, DEFAULT_ICON_PATH, ARRAYSIZE(DEFAULT_ICON_PATH));
 
 	TCHAR dllPath[MAX_PATH];
-	::GetModuleFileName(dllInstance, dllPath, sizeof(dllPath));
+	::GetModuleFileName(dllInstance, dllPath, ARRAYSIZE(dllPath));
 	_tcscpy(DLL_NAME, ::PathFindFileName(dllPath));
 
 	FillAvailTasksMap();
@@ -233,7 +233,7 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 		{
 			recentFilePaths.push_back(buf);
 			
-			int pos = recentFilePaths.back().rfind(TEXT('\\'));
+			size_t pos = recentFilePaths.back().rfind(TEXT('\\'));
 			
 			if (pos == recentFilePaths.back().npos)
 			{
@@ -251,7 +251,7 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 			}
 
 			// extract number
-			for (int j = 0; j < recentFilePaths.back().size(); ++j)
+			for (size_t j = 0; j < recentFilePaths.back().size(); ++j)
 			{
 				#ifdef UNICODE
 				if (iswdigit(recentFilePaths.back()[j]))
@@ -267,7 +267,7 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 					break;
 			}
 			
-			menuPosToVecPos.insert(std::pair<int, int>(_ttoi(numStr.c_str()), recentFilePaths.size() - 1));
+			menuPosToVecPos.insert(std::pair<int, int>(_ttoi(numStr.c_str()), static_cast<int>(recentFilePaths.size() - 1)));
 			
 			recentFileNames.push_back(recentFilePaths.back().substr(pos+1));
 
@@ -323,7 +323,7 @@ HRESULT FillJumpListTasks(IObjectCollection* poc)
 	IShellLink * psl;
 	JPTaskProps taskProps;
 
-	for (int i = 0; i < settings->tasks.size(); ++i)
+	for (size_t i = 0; i < settings->tasks.size(); ++i)
 	{
 		taskProps = availTasks[settings->tasks[i]];
 
@@ -413,7 +413,7 @@ void FillAvailTasksMap()
 	availTasks.clear();
 
 	TCHAR dllPath[MAX_PATH] = TEXT("");
-	::GetModuleFileName(dllInstance, dllPath, sizeof(dllPath));
+	::GetModuleFileName(dllInstance, dllPath, ARRAYSIZE(dllPath));
 
 	PWSTR sysDir;
 	TCHAR shellDllPath[MAX_PATH] = TEXT("");
@@ -677,7 +677,7 @@ bool IsLinkRemoved(PCTSTR _testStr, IObjectArray *_removedArr)
 		if (FAILED(_removedArr->GetAt(i, IID_PPV_ARGS(&link))))
 			continue;
 		
-		if (SUCCEEDED(link->GetArguments(buf, sizeof(buf))))
+		if (SUCCEEDED(link->GetArguments(buf, ARRAYSIZE(buf))))
 		{
 			if (!_tcscmp(_testStr, buf))
 			{
@@ -699,7 +699,7 @@ std::basic_string<TCHAR> GetDefArgsLine(TCHAR _mode)
 	TCHAR path[MAX_PATH];
 
 	// first append NppJumpList.dll path
-	::GetModuleFileName(dllInstance, path, sizeof(path));
+	::GetModuleFileName(dllInstance, path, ARRAYSIZE(path));
 
 	cmdLine = TEXT("\"");
 	cmdLine += path;
@@ -711,7 +711,7 @@ std::basic_string<TCHAR> GetDefArgsLine(TCHAR _mode)
 	cmdLine += TEXT(' ');
 		
 	// notepad++.exe path
-	::GetModuleFileName(NULL, path, sizeof(path));
+	::GetModuleFileName(NULL, path, ARRAYSIZE(path));
 		
 	cmdLine += TEXT(" \"");
 	cmdLine += path;

@@ -153,7 +153,7 @@ INT_PTR CALLBACK JPFormProc(HWND _hDlg, UINT uMessage, WPARAM wParam, LPARAM lPa
 		{
 			ListBox_ResetContent(hListTskShown);
 
-			for (int i = 0; i < settings->tasks.size(); ++i)
+			for (size_t i = 0; i < settings->tasks.size(); ++i)
 			{
 				ListBox_SelectString(hListTskAvail, -1, availTasks[settings->tasks[i]].taskName.c_str());
 				
@@ -191,7 +191,7 @@ void UserInputToSettings()
 
 	for (int i = 0; i < ListBox_GetCount(hListTskShown); ++i)
 	{
-		int itemIndex = ListBox_GetItemData(hListTskShown, i);
+		LRESULT itemIndex = ListBox_GetItemData(hListTskShown, i);
 		settings->tasks.push_back(availIndex[itemIndex]);
 	}
 }
@@ -218,7 +218,7 @@ void MoveTask(HWND _hSrcList, HWND _hDestList)
 	if (srcPos == LB_ERR)
 		return;
 
-	int itemIndex = ListBox_GetItemData(_hSrcList, srcPos);
+	LRESULT itemIndex = ListBox_GetItemData(_hSrcList, srcPos);
 	
 	int destPos = ListBox_AddString(_hDestList, availTasks[availIndex[itemIndex]].taskName.c_str());
 	ListBox_SetItemData(_hDestList, destPos, itemIndex);
@@ -250,7 +250,7 @@ void OrderTask(HWND _hList, bool _up)
 	if (!_up && (pos  == (ListBox_GetCount(_hList) - 1)))
 		return;
 
-	int itemIndex = ListBox_GetItemData(_hList, pos);
+	LRESULT itemIndex = ListBox_GetItemData(_hList, pos);
 
 	ListBox_DeleteString(_hList, pos);
 
