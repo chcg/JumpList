@@ -31,14 +31,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 	switch (reasonForCall)
     {
       case DLL_PROCESS_ATTACH:
-		{
-		  TCHAR procPath[65535] = {0};
-		  ::GetModuleFileName(NULL, procPath, sizeof(procPath)-1);
-
-		  if (_tcsicmp(PathFindFileName(procPath), TEXT("rundll32.exe")) != 0)
-		    pluginInit(hModule);
-		}
-        break;
+		break;
 
       case DLL_PROCESS_DETACH:
 		commandMenuCleanUp();
@@ -60,6 +53,12 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 {
 	nppData = notpadPlusData;
 	commandMenuInit();
+
+	//TCHAR procPath[MAX_PATH] = {0};
+	//::GetModuleFileName(NULL, procPath, sizeof(procPath)-1);
+	
+	//if (_tcsicmp(PathFindFileName(procPath), TEXT("rundll32.exe")) != 0)
+	pluginInit();
 }
 
 extern "C" __declspec(dllexport) const TCHAR * getName()
@@ -73,33 +72,8 @@ extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *nbF)
 	return funcItem;
 }
 
-//#include <fstream>
-//using namespace std;
 extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 {
-	/*int which = -1;
-    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
-    if (which == -1)
-        return;
-    HWND curScintilla = (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;*/
-
-	/*char tmp[123];
-	itoa(notifyCode->nmhdr.code, tmp, 10);
-
-	static int qqq = 0;*/
-
-    //::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)(&tmp[0]));*/
-
-	/*ofstream qwe("C:\\wwww.txt", ios::app);
-	qwe << qqq << ":\t" << tmp << endl;
-	qwe.close();
-
-	qqq++;*/
-
-	/*if ((notifyCode->nmhdr.code == NPPN_FILEBEFOREOPEN) || (notifyCode->nmhdr.code == NPPN_FILEOPENED)) 
-	{
-		setFormatGal();
-	}*/
 }
 
 
@@ -109,12 +83,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 // http://sourceforge.net/forum/forum.php?forum_id=482781
 //
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
-{/*
-	if (Message == WM_MOVE)
-	{
-		::MessageBox(NULL, "move", "", MB_OK);
-	}
-*/
+{
 	return TRUE;
 }
 

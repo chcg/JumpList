@@ -191,7 +191,7 @@ HRESULT FillJumpListTasks(IObjectCollection* poc)
 
 	if (!cmdLinePrepared)
 	{
-		TCHAR path[65536];
+		TCHAR path[MAX_PATH];
 		::GetModuleFileName(dllInstance, path, sizeof(path)-1); // get NppJumpList.dll path
 		
 		cmdLine = TEXT("\"");

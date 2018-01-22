@@ -47,7 +47,7 @@ const int nbFunc = 2;
 // Initialization of your plugin data
 // It will be called while plugin loading
 //
-void pluginInit(HANDLE hModule);
+void pluginInit();
 
 //
 // Cleaning of your plugin

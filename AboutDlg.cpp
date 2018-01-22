@@ -69,7 +69,7 @@ INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lP
 bool GetProductVersion(std::basic_string<TCHAR> &_prodVer)
 {
     // get the filename of the dll
-    TCHAR szFilename[65536] = {0};
+    TCHAR szFilename[MAX_PATH] = {0};
     if (!::GetModuleFileName(dllInstance, szFilename, MAX_PATH))
         return false;
     

@@ -215,7 +215,6 @@ void MoveTask(HWND _hSrcList, HWND _hDestList)
 	int itemIndex = ListBox_GetItemData(_hSrcList, srcPos);
 	
 	int destPos = ListBox_AddString(_hDestList, availTasks[availIndex[itemIndex]].taskName.c_str());
-
 	ListBox_SetItemData(_hDestList, destPos, itemIndex);
 
 	ListBox_DeleteString(_hSrcList, srcPos);
@@ -254,7 +253,8 @@ void OrderTask(HWND _hList, bool _up)
 	else
 		pos++;
 
-	ListBox_InsertString(_hList, pos, availTasks[availIndex[itemIndex]].taskName.c_str());
+	int destPos = ListBox_InsertString(_hList, pos, availTasks[availIndex[itemIndex]].taskName.c_str());
+	ListBox_SetItemData(_hList, destPos, itemIndex);
 
 	ListBox_SetCurSel(_hList, pos);
 

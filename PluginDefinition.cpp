@@ -31,17 +31,34 @@ extern HINSTANCE dllInstance;
 
 SettingsManager *settings;
 
-//
-// Initialize your plugin data here
-// It will be called while plugin loading   
-void pluginInit(HANDLE hModule)
+void pluginInit()
 {
-	TCHAR procPath[65536] = {0}, drive[256], dirPath[65536], iniPath[65536];
-	::GetModuleFileName((HMODULE)hModule, &procPath[0], sizeof(procPath)-1);
+	TCHAR configPath[MAX_PATH], iniPath[MAX_PATH];
+	::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, (LPARAM)configPath);
 	
-	_tsplitpath(procPath, drive, dirPath, NULL, NULL);
+	if (::PathFileExists(configPath) == FALSE)
+		::CreateDirectory(configPath, NULL);
 	
-	_tmakepath(iniPath, drive, _tcscat(dirPath, TEXT("\\Config\\")), TEXT("NppJumpList"), TEXT("ini"));
+	_tcscpy(iniPath, configPath);
+	_tcscat(iniPath, TEXT("\\NppJumpList.ini"));
+	
+	if (::PathFileExists(iniPath) == FALSE)
+	{
+		HANDLE	hFile			= NULL;
+		#ifdef UNICODE
+		CHAR	szBOM[]			= {0xFF, 0xFE};
+		DWORD	dwByteWritten	= 0;
+		#endif
+			
+		if (hFile != INVALID_HANDLE_VALUE)
+		{
+			hFile = ::CreateFile(iniPath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			#ifdef UNICODE
+			::WriteFile(hFile, szBOM, sizeof(szBOM), &dwByteWritten, NULL);
+			#endif
+			::CloseHandle(hFile);
+		}
+	}
 
 	InitJumpList();
 
