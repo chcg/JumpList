@@ -22,8 +22,8 @@ install:
     - if "%platform%"=="Win32" set archi=x86
     - if "%platform%"=="Win32" set platform_input=Win32
 
-    - if "%PlatformToolset%"=="v140_xp" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %archi%
-    - if "%PlatformToolset%"=="v141_xp" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %archi%
+    - if "%PlatformToolset%"=="v140" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %archi%
+    - if "%PlatformToolset%"=="v141" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %archi%
 
 
 build_script:
@@ -35,21 +35,21 @@ after_build:
     - ps: >-
 
         if ($env:PLATFORM_INPUT -eq "x64") {
-            Push-AppveyorArtifact "src\$env:PLATFORM\$env:CONFIGURATION\NppJumpList.dll" -FileName NppJumpList.dll
+            Push-AppveyorArtifact "$env:PLATFORM\$env:CONFIGURATION\NppJumpList.dll" -FileName NppJumpList.dll
         }
 
         if ($env:PLATFORM_INPUT -eq "Win32" ) {
-            Push-AppveyorArtifact "src\$env:CONFIGURATION\NppJumpList.dll" -FileName NppJumpList.dll
+            Push-AppveyorArtifact "$env:CONFIGURATION\NppJumpList.dll" -FileName NppJumpList.dll
         }
 
         if ($($env:APPVEYOR_REPO_TAG) -eq "true" -and $env:CONFIGURATION -eq "Release" -and $env:PLATFORMTOOLSET -eq "v140") {
             if($env:PLATFORM_INPUT -eq "x64"){
             $ZipFileName = "NppJumpList_$($env:APPVEYOR_REPO_TAG_NAME)_x64.zip"
-            7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\src\$env:PLATFORM_INPUT\$env:CONFIGURATION\*.dll"
+            7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\$env:PLATFORM_INPUT\$env:CONFIGURATION\*.dll"
             }
             if($env:PLATFORM_INPUT -eq "Win32"){
             $ZipFileName = "NppJumpList_$($env:APPVEYOR_REPO_TAG_NAME)_x86.zip"
-            7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\src\$env:CONFIGURATION\*.dll"
+            7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\$env:CONFIGURATION\*.dll"
             }
         }
 
