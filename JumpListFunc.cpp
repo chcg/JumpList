@@ -506,7 +506,7 @@ void CALLBACK ParseJPCmdW (
 		
 		if ((::OpenMutex(0, false, TEXT("nppInstance")) == NULL) && (::GetLastError() == ERROR_FILE_NOT_FOUND))
 		{
-			if (int(::ShellExecute(NULL, TEXT("open"), args[1], NULL, NULL, SW_SHOWNORMAL)) <= 32)
+			if (INT_PTR(::ShellExecute(NULL, TEXT("open"), args[1], NULL, NULL, SW_SHOWNORMAL)) <= 32)
 				return;
 			
 			::Sleep(100);
@@ -555,7 +555,7 @@ void SendNppRecentCmd(LPTSTR _idStr, LPTSTR _menuStr)
 	HMENU hNppFileMenu = ::GetSubMenu(hNppMainMenu, NPP_MENUINDEX_FILE);
 
 	bool foundItem = false;
-	UINT itemID;
+	UINT itemID = 0;
 
 	for (int i = 0; i < recentMax; ++i)
 	{

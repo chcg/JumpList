@@ -6,6 +6,6 @@ unofficial repo with sourcecode from https://sourceforge.net/projects/nppjumplis
 Build Status
 ------------
 
-AppVeyor `VS2015` and `VS2017`  [![Build status](https://ci.appveyor.com/api/projects/status/7113mr7vwkdegp1p?svg=true)](https://ci.appveyor.com/project/chcg/jumplist)
+AppVeyor `VS2019`  [![Build status](https://ci.appveyor.com/api/projects/status/7113mr7vwkdegp1p?svg=true)](https://ci.appveyor.com/project/chcg/jumplist)
 
 
