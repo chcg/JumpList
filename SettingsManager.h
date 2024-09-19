@@ -31,11 +31,12 @@ private:
 	bool IniReadBool(LPTSTR, LPTSTR, bool&);
 	bool IniReadString(LPTSTR, LPTSTR, std::basic_string<TCHAR>&);
 public:
-	bool enableJP
-		,showDefRecent
-		,showTasks
-		,showCustomRecent
-		,showDefFrequent;
+	// default settings
+	bool enableJP = true;
+	bool showDefRecent = false;
+	bool showTasks = true;
+	bool showCustomRecent = true;
+	bool showDefFrequent = false;
 
 	std::vector<std::basic_string<TCHAR> > tasks;
 

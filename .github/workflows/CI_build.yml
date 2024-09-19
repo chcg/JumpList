@@ -30,7 +30,7 @@ jobs:
       if: matrix.build_configuration == 'Release'
       run: |
            7z a NppJumpList_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}.zip .\${{ matrix.build_platform }}\${{ matrix.build_configuration }}\NppJumpList.dll
-           7z a NppJumpList_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}.zip .\readme.txt"
+           7z a NppJumpList_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}.zip .\readme.txt
 
 
     - name: Archive artifacts for ${{ matrix.build_platform }}

@@ -33,7 +33,7 @@ SettingsManager *settings;
 
 void pluginInit()
 {
-	TCHAR configPath[MAX_PATH], iniPath[MAX_PATH];
+	TCHAR configPath[MAX_PATH]{}, iniPath[MAX_PATH]{};
 	::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, (LPARAM)configPath);
 	
 	if (::PathFileExists(configPath) == FALSE)

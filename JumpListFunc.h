@@ -28,12 +28,12 @@
 
 struct JPTaskProps
 {
-	UINT msg;
-	WPARAM wParam;
-	LPARAM lParam;
+	UINT msg = 0;
+	WPARAM wParam = 0;
+	LPARAM lParam = 0;
 	std::basic_string<TCHAR> taskName;
 	std::basic_string<TCHAR> iconFilePath;
-	int iconResID;
+	int iconResID = 0;
 };
 
 typedef std::map<std::basic_string<TCHAR>, JPTaskProps> TAvailTasks;
