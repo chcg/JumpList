@@ -356,42 +356,42 @@ HRESULT CreateShellLink(PCTSTR _path, PCTSTR _arguments, PCTSTR _title, IShellLi
 	__try
 	{
 		if (FAILED(hr))
-			return hr;
+			__leave;
 
 		hr = psl->SetPath(_path);
 
 		if (FAILED(hr))
-			return hr;
+			__leave;
 
 		hr = psl->SetArguments(_arguments);
 
 		if (FAILED(hr))
-			return hr;
+			__leave;
 
 		hr = psl->SetIconLocation(_iconFilePath, -_iconIndex); // minus sign means it's resource id
 
 		if (FAILED(hr))
-			return hr;
+			__leave;
 
 		hr = psl->QueryInterface(IID_PPV_ARGS(&pps));
 
 		if (FAILED(hr))
-			return hr;
+			__leave;
 
 		hr = ::InitPropVariantFromString(_title, &propvar);
 
 		if (FAILED(hr))
-			return hr;
+			__leave;
 
 		hr = pps->SetValue(PKEY_Title, propvar);
 
 		if (FAILED(hr))
-			return hr;
+			__leave;
 
 		hr = pps->Commit();
 
 		if (FAILED(hr))
-			return hr;
+			__leave;
 
 		hr = psl->QueryInterface(IID_PPV_ARGS(_ppsl));
 	}
@@ -469,19 +469,18 @@ void CALLBACK ParseJPCmdW (
 {
 	FillAvailTasksMap();
 
-	LPTSTR *args;
-	int nArgs;
+	int nArgs = 0;
 
-	args = ::CommandLineToArgvW(lpszCmdLine, &nArgs);
+	LPTSTR* args = ::CommandLineToArgvW(lpszCmdLine, &nArgs);
 
 	if (!args)
 		return;
 
+	if (nArgs < 1)
+		return;
+
 	__try
 	{
-		if (nArgs < 1)
-			return;
-
 		// args[0] == mode
 		// args[1] == path to notepad++.exe
 
