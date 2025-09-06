@@ -16,6 +16,8 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include "JumpListFunc.h"
+#include "menuCmdID.h"
+#include <string>
 
 LPCTSTR wszAppID = TEXT("DonHo.NotepadPlusPlus.NppJumpList.Ahv");
 TAvailTasks availTasks;
@@ -72,7 +74,7 @@ bool InitJumpList()
 	inited = initedCOM = false;
 
 	HRESULT hr = ::SetCurrentProcessExplicitAppUserModelID(wszAppID);
-	
+
 	if FAILED(hr)
 		return false;
 
@@ -93,28 +95,28 @@ bool InitJumpList()
 bool CreateJumpList()
 {
 	ICustomDestinationList* pcdl = NULL;
-	
+
 	HRESULT hr = ::CoCreateInstance(CLSID_DestinationList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pcdl));
 
 	if FAILED(hr)
 		return false;
-	
+
 	hr = pcdl->SetAppID(wszAppID);
 
 	if FAILED(hr)
 		return false;
-	
+
 	UINT uMaxSlots;
 	IObjectArray *poaRemoved;
 	hr = pcdl->BeginList(&uMaxSlots, IID_PPV_ARGS(&poaRemoved));
 
 	if FAILED(hr)
 		return false;
-	
+
 	if (settings->showDefRecent)
 	{
 		hr = pcdl->AppendKnownCategory(KDC_RECENT);
-		
+
 		if FAILED(hr)
 			return false;
 	}
@@ -130,10 +132,10 @@ bool CreateJumpList()
 	if (settings->showCustomRecent)
 	{
 		hr = AddCategoryToList(pcdl, poaRemoved);
-		
+
 		if FAILED(hr)
 			return false;
-		
+
 		// intercept messages for tracking recent list changes
 		::SetWindowsHookEx(WH_CALLWNDPROCRET, (HOOKPROC)NppHookCallWndRetProc, NULL, ::GetCurrentThreadId());
 		::SetWindowsHookEx(WH_MSGFILTER, (HOOKPROC)NppHookMessageProc, NULL, ::GetCurrentThreadId());
@@ -157,7 +159,7 @@ bool CreateJumpList()
 
 	pcdl->CommitList();
 
-    poaRemoved->Release();
+	poaRemoved->Release();
 
 	return true;
 }
@@ -165,22 +167,22 @@ bool CreateJumpList()
 bool DestroyJumpList()
 {
 	ICustomDestinationList* pcdl = NULL;
-	
+
 	HRESULT hr = ::CoCreateInstance(CLSID_DestinationList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pcdl));
 
 	if FAILED(hr)
 		return false;
-	
+
 	hr = pcdl->SetAppID(wszAppID);
 
 	if FAILED(hr)
 		return false;
-	
+
 	hr = pcdl->DeleteList(wszAppID);
 
 	if FAILED(hr)
 		return false;
-	
+
 	return true;
 }
 
@@ -199,8 +201,8 @@ bool DeinitJumpList()
 
 HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved)
 {
-    IObjectCollection *poc;
-    HRESULT hr = ::CoCreateInstance(CLSID_EnumerableObjectCollection, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&poc));
+	IObjectCollection *poc;
+	HRESULT hr = ::CoCreateInstance(CLSID_EnumerableObjectCollection, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&poc));
 	IShellLink * psl;
 
 	if (FAILED(hr))
@@ -209,20 +211,20 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 	HMENU hNppMainMenu = ::GetMenu(nppData._nppHandle);
 	HMENU hNppFileMenu = ::GetSubMenu(hNppMainMenu, NPP_MENUINDEX_FILE);
 
-	std::vector<tstring> recentFilePaths;
-	std::vector<tstring> recentFileNames;
-	std::vector<tstring> recentFileIDs;
+	std::vector<std::wstring> recentFilePaths;
+	std::vector<std::wstring> recentFileNames;
+	std::vector<std::wstring> recentFileIDs;
 	std::map<int, int> menuPosToVecPos;
 	recentFilePaths.clear();
 	recentFileNames.clear();
 	recentFileIDs.clear();
 	menuPosToVecPos.clear();
-	
+
 	for (UINT i = 0; i < recentMax; ++i)
 	{
-		TCHAR buf[1024] = {0};
-		tstring numStr = TEXT("");
-		
+		wchar_t buf[1024] = {0};
+		std::wstring numStr = TEXT("");
+
 		MENUITEMINFO itemInfo = {0};
 		itemInfo.cbSize = sizeof(MENUITEMINFO);
 		itemInfo.fMask = MIIM_STRING;
@@ -232,9 +234,9 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 		if (::GetMenuItemInfo(hNppFileMenu, recentID + i, false, &itemInfo))
 		{
 			recentFilePaths.push_back(buf);
-			
+
 			size_t pos = recentFilePaths.back().rfind(TEXT('\\'));
-			
+
 			if (pos == recentFilePaths.back().npos)
 			{
 				pos = recentFilePaths.back().rfind(TEXT(": "));
@@ -266,16 +268,16 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 				if (recentFilePaths.back()[j] != TEXT('&'))
 					break;
 			}
-			
+
 			menuPosToVecPos.insert(std::pair<int, int>(_ttoi(numStr.c_str()), static_cast<int>(recentFilePaths.size() - 1)));
-			
+
 			recentFileNames.push_back(recentFilePaths.back().substr(pos+1));
 
 			_itot(recentID + i, buf, 10);
 			recentFileIDs.push_back(buf);
 		}
 	}
-	
+
 	// TODO: get shell icons
 	// upd: 1. the most proper way is to just register npp as non-default handler for file types on "file opened" notification,
 	//      and use default recent list or use shellitems in custom list.
@@ -285,11 +287,11 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 	{
 		int vecPos = it->second;
 
-		tstring linkStr = GetDefArgsLine(MODE_RECENT_CMD) + recentFileIDs[vecPos] + TEXT(" \"") + recentFilePaths[vecPos] + TEXT("\"");
+		std::wstring linkStr = GetDefArgsLine(MODE_RECENT_CMD) + recentFileIDs[vecPos] + TEXT(" \"") + recentFilePaths[vecPos] + TEXT("\"");
 
-        if (IsLinkRemoved(linkStr.c_str(), poaRemoved))
+		if (IsLinkRemoved(linkStr.c_str(), poaRemoved))
 			continue;
-		
+
 		hr = CreateShellLink(TEXT("rundll32"),
 							 linkStr.c_str(),
 							 recentFileNames[vecPos].c_str(),
@@ -302,17 +304,17 @@ HRESULT AddCategoryToList(ICustomDestinationList *pcdl, IObjectArray *poaRemoved
 
 			psl->Release();
 		}
-    }
+	}
 
-    IObjectArray *poa;
-    hr = poc->QueryInterface(IID_PPV_ARGS(&poa));
+	IObjectArray *poa;
+	hr = poc->QueryInterface(IID_PPV_ARGS(&poa));
 
-    if (SUCCEEDED(hr))
-    {
+	if (SUCCEEDED(hr))
+	{
 		pcdl->AppendCategory(settings->showDefRecent ? TEXT("Recent++") : TEXT("Recent"), poa);
-        poa->Release();
-    }
-    poc->Release();
+		poa->Release();
+	}
+	poc->Release();
 
 	return hr;
 }
@@ -345,11 +347,11 @@ HRESULT FillJumpListTasks(IObjectCollection* poc)
 
 HRESULT CreateShellLink(PCTSTR _path, PCTSTR _arguments, PCTSTR _title, IShellLink **_ppsl, LPCTSTR _iconFilePath, int _iconIndex)
 {
-    IShellLink *psl = NULL;
+	IShellLink *psl = NULL;
 	IPropertyStore *pps = NULL;
 	PROPVARIANT propvar = {0};
 
-    HRESULT hr = ::CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&psl));
+	HRESULT hr = ::CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&psl));
 
 	__try
 	{
@@ -375,7 +377,7 @@ HRESULT CreateShellLink(PCTSTR _path, PCTSTR _arguments, PCTSTR _title, IShellLi
 
 		if (FAILED(hr))
 			return hr;
- 
+
 		hr = ::InitPropVariantFromString(_title, &propvar);
 
 		if (FAILED(hr))
@@ -400,12 +402,12 @@ HRESULT CreateShellLink(PCTSTR _path, PCTSTR _arguments, PCTSTR _title, IShellLi
 
 		if (psl != NULL)
 			psl->Release();
-		
+
 		if (propvar.vt != VT_EMPTY)
 			::PropVariantClear(&propvar);
 	}
 
-    return hr;
+	return hr;
 }
 
 void FillAvailTasksMap()
@@ -448,7 +450,7 @@ void FillAvailTasksMap()
 void AddAvailTask(LPCTSTR _taskName, LPCTSTR _cmdName, UINT _msg, WPARAM _wParam, LPARAM _lParam, LPCTSTR _iconFilePath, int _iconResID)
 {
 	JPTaskProps tmpTaskProps;
-	
+
 	tmpTaskProps.taskName = _taskName;
 	tmpTaskProps.msg = _msg;
 	tmpTaskProps.wParam = _wParam;
@@ -459,30 +461,30 @@ void AddAvailTask(LPCTSTR _taskName, LPCTSTR _cmdName, UINT _msg, WPARAM _wParam
 }
 
 void CALLBACK ParseJPCmdW (
-   HWND hwnd,           // handle to owner window
-   HINSTANCE hinst,     // instance handle for the DLL
+   HWND /*hwnd*/,           // handle to owner window
+   HINSTANCE /*hinst*/,     // instance handle for the DLL
    LPWSTR lpszCmdLine,  // string the DLL will parse
-   int nCmdShow         // show state
+   int /*nCmdShow*/         // show state
 )
 {
 	FillAvailTasksMap();
-	
+
 	LPTSTR *args;
 	int nArgs;
-	
+
 	args = ::CommandLineToArgvW(lpszCmdLine, &nArgs);
-	
+
 	if (!args)
 		return;
-	
+
 	__try
 	{
 		if (nArgs < 1)
 			return;
-		
+
 		// args[0] == mode
 		// args[1] == path to notepad++.exe
-		
+
 		switch (*args[0])
 		{
 		case MODE_TASK_CMD:
@@ -490,7 +492,7 @@ void CALLBACK ParseJPCmdW (
 				// args[2] == jump list command (availTasks key)
 				if (nArgs != 3)
 					return;
-				
+
 				break;
 			}
 		case MODE_RECENT_CMD:
@@ -499,19 +501,19 @@ void CALLBACK ParseJPCmdW (
 				// args[3] == recent file path (could be shortened by menu)
 				if (nArgs != 4)
 					return;
-				
+
 				break;
 			}
 		}
-		
+
 		if ((::OpenMutex(0, false, TEXT("nppInstance")) == NULL) && (::GetLastError() == ERROR_FILE_NOT_FOUND))
 		{
 			if (INT_PTR(::ShellExecute(NULL, TEXT("open"), args[1], NULL, NULL, SW_SHOWNORMAL)) <= 32)
 				return;
-			
+
 			::Sleep(100);
 		}
-		
+
 		switch (*args[0])
 		{
 		case MODE_TASK_CMD:
@@ -538,13 +540,13 @@ void SendNppTaskCmd(LPTSTR cmd)
 
 	if (hNpp)
 	{
-		JPTaskProps tmpTaskProps = availTasks[tstring(cmd)];
+		JPTaskProps tmpTaskProps = availTasks[std::wstring(cmd)];
 
 		::SendMessage(hNpp, tmpTaskProps.msg, tmpTaskProps.wParam, tmpTaskProps.lParam);
 	}
 }
 
-void SendNppRecentCmd(LPTSTR _idStr, LPTSTR _menuStr)
+void SendNppRecentCmd(LPTSTR /*_idStr*/, LPTSTR _menuStr)
 {
 	HWND hNpp = FindNppWindow();
 
@@ -588,15 +590,15 @@ HWND FindNppWindow()
 	TCHAR nppClassName[] = TEXT("Notepad++");
 
 	HWND hNpp = ::FindWindow(nppClassName, NULL);
-	
+
 	for (int i = 0 ; !hNpp && i < 5 ; i++)
 	{
 		Sleep(100);
 		hNpp = ::FindWindow(nppClassName, NULL);
 	}
-    
+
 	if (hNpp)
-    {
+	{
 		int sw;
 
 		if (::IsZoomed(hNpp))
@@ -668,15 +670,15 @@ bool IsLinkRemoved(PCTSTR _testStr, IObjectArray *_removedArr)
 	IShellLink *link;
 	UINT arrSz;
 	TCHAR buf[1024];
-	
+
 	if (FAILED(_removedArr->GetCount(&arrSz)))
 		return false;
-	
+
 	for (UINT i = 0; i < arrSz; ++i)
 	{
 		if (FAILED(_removedArr->GetAt(i, IID_PPV_ARGS(&link))))
 			continue;
-		
+
 		if (SUCCEEDED(link->GetArguments(buf, ARRAYSIZE(buf))))
 		{
 			if (!_tcscmp(_testStr, buf))
@@ -685,7 +687,7 @@ bool IsLinkRemoved(PCTSTR _testStr, IObjectArray *_removedArr)
 				return true;
 			}
 		}
-		
+
 		link->Release();
 	}
 
@@ -695,7 +697,7 @@ bool IsLinkRemoved(PCTSTR _testStr, IObjectArray *_removedArr)
 std::basic_string<TCHAR> GetDefArgsLine(TCHAR _mode)
 {
 	static std::basic_string<TCHAR> cmdLine;
-	
+
 	TCHAR path[MAX_PATH];
 
 	// first append NppJumpList.dll path
@@ -709,15 +711,15 @@ std::basic_string<TCHAR> GetDefArgsLine(TCHAR _mode)
 	// mode
 	cmdLine += _mode;
 	cmdLine += TEXT(' ');
-		
+
 	// notepad++.exe path
 	::GetModuleFileName(NULL, path, ARRAYSIZE(path));
-		
+
 	cmdLine += TEXT(" \"");
 	cmdLine += path;
 	cmdLine += TEXT("\" ");
-	
+
 	// final mode specific arguments get appended somewhere else
-	
+
 	return cmdLine;
 }

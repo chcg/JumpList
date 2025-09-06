@@ -16,6 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include "JPForm.h"
+#include "Notepad_plus_msgs.h"
 
 extern NppData nppData;
 extern SettingsManager *settings;
@@ -38,7 +39,7 @@ INT_PTR CALLBACK JPFormProc(HWND _hDlg, UINT uMessage, WPARAM wParam, LPARAM lPa
 {
 	if (uMessage == WM_COMMAND)
 	{
-		switch (LOWORD(wParam)) 
+		switch (LOWORD(wParam))
 		{
 		// dialog buttons
 		case IDOK:
@@ -156,7 +157,7 @@ INT_PTR CALLBACK JPFormProc(HWND _hDlg, UINT uMessage, WPARAM wParam, LPARAM lPa
 			for (size_t i = 0; i < settings->tasks.size(); ++i)
 			{
 				ListBox_SelectString(hListTskAvail, -1, availTasks[settings->tasks[i]].taskName.c_str());
-				
+
 				MoveTask(hListTskAvail, hListTskShown);
 			}
 		}
@@ -174,6 +175,9 @@ INT_PTR CALLBACK JPFormProc(HWND _hDlg, UINT uMessage, WPARAM wParam, LPARAM lPa
 		hEd = ::GetDlgItem(hDlg, IDC_BUT_DOWN_TSK);
 		if (hEd)
 			::SetWindowText(hEd, TEXT("˅"));
+
+		//Modified for darkmode support
+		::SendMessage(nppData._nppHandle, NPPM_DARKMODESUBCLASSANDTHEME, static_cast<WPARAM>(NppDarkMode::dmfInit), reinterpret_cast<LPARAM>(hDlg));
 	}
 
 	return 0;
@@ -199,9 +203,9 @@ void UserInputToSettings()
 void GetCheckBoxValue(int _buttonID, bool &_var)
 {
 	UINT cbState;
-	
+
 	cbState = ::IsDlgButtonChecked(hDlg, _buttonID);
-	
+
 	if (cbState == BST_CHECKED)
 		_var = true;
 	else if (cbState == BST_UNCHECKED)
@@ -212,14 +216,14 @@ void MoveTask(HWND _hSrcList, HWND _hDestList)
 {
 	if (!_hSrcList || !_hDestList)
 		return;
-	
+
 	int srcPos = ListBox_GetCurSel(_hSrcList);
-	
+
 	if (srcPos == LB_ERR)
 		return;
 
 	LRESULT itemIndex = ListBox_GetItemData(_hSrcList, srcPos);
-	
+
 	int destPos = ListBox_AddString(_hDestList, availTasks[availIndex[itemIndex]].taskName.c_str());
 	ListBox_SetItemData(_hDestList, destPos, itemIndex);
 
@@ -240,7 +244,7 @@ void MoveAllTasks(HWND _hSrcList, HWND _hDestList)
 void OrderTask(HWND _hList, bool _up)
 {
 	int pos = ListBox_GetCurSel(_hList);
-	
+
 	if (pos == LB_ERR)
 		return;
 

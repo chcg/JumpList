@@ -16,6 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include "AboutDlg.h"
+#include "Notepad_plus_msgs.h"
 
 extern NppData nppData;
 extern HINSTANCE dllInstance;
@@ -23,80 +24,83 @@ extern HINSTANCE dllInstance;
 // get version from resource
 bool GetProductVersion(std::basic_string<TCHAR> &_prodVer);
 
-INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM /*lParam*/)
 {
-  if (uMessage == WM_COMMAND)
-  {
-    switch (LOWORD(wParam)) 
-    {
-      case IDOK:
-	  case IDCANCEL:
-      {
-        EndDialog(hDlg, 1);
-        return 1;
-      }
-      default:
-        break;
-    }
-  }
+	if (uMessage == WM_COMMAND)
+	{
+		switch (LOWORD(wParam))
+		{
+			case IDOK:
+			case IDCANCEL:
+			{
+				EndDialog(hDlg, 1);
+				return 1;
+			}
+			default:
+				break;
+		}
+	}
+	else if (uMessage == WM_SYSCOMMAND)
+	{
+		if (wParam == SC_CLOSE)
+		{
+			EndDialog(hDlg, 0);
+			return 1;
+		}
+	}
+	else if (uMessage == WM_INITDIALOG)
+	{
+		CenterWindow(hDlg, nppData._nppHandle, 0);
 
-  else if (uMessage == WM_SYSCOMMAND)
-  {
-    if (wParam == SC_CLOSE)
-    {
-      EndDialog(hDlg, 0);
-      return 1;
-    }
-  }
+		HWND hCtrl = ::GetDlgItem(hDlg, IDC_BUILD_INFO);
 
-  else if (uMessage == WM_INITDIALOG)
-  {
-    CenterWindow(hDlg, nppData._nppHandle, 0);
+		std::basic_string<TCHAR> prodVer;
+		GetProductVersion(prodVer);
 
-	HWND hCtrl = ::GetDlgItem(hDlg, IDC_BUILD_INFO);
-	
-	std::basic_string<TCHAR> prodVer;
-	GetProductVersion(prodVer);
+		if (hCtrl)
+		{
+			::SetWindowText(hCtrl, (std::basic_string<TCHAR>(TEXT("Version ")) + prodVer + TEXT("\r\nBuilt on ") +
+				TEXT(__DATE__) + TEXT(" at ") + TEXT(__TIME__)).c_str());
+		}
 
-	if (hCtrl)
-		::SetWindowText(hCtrl, (std::basic_string<TCHAR>(TEXT("Version ")) + prodVer + TEXT("\r\nBuilt on ") +
-		                        TEXT(__DATE__) + TEXT(" at ") + TEXT(__TIME__)).c_str());
-  }
+		//Modified for darkmode support
+		::SendMessage(nppData._nppHandle, NPPM_DARKMODESUBCLASSANDTHEME, static_cast<WPARAM>(NppDarkMode::dmfInit), reinterpret_cast<LPARAM>(hDlg));
+	}
 
-  return 0;
+	return 0;
 }
 
 bool GetProductVersion(std::basic_string<TCHAR> &_prodVer)
 {
-    // get the filename of the dll
-    TCHAR szFilename[MAX_PATH] = {0};
-    if (!::GetModuleFileName(dllInstance, szFilename, MAX_PATH))
-        return false;
-    
-    // allocate a block of memory for the version info
-    DWORD dummy;
-    DWORD dwSize = GetFileVersionInfoSize(szFilename, &dummy);
-    if (!dwSize)
-        return false;
-    
+	// get the filename of the dll
+	TCHAR szFilename[MAX_PATH] = {0};
+	if (!::GetModuleFileName(dllInstance, szFilename, MAX_PATH))
+		return false;
+
+	// allocate a block of memory for the version info
+	DWORD dummy;
+	DWORD dwSize = GetFileVersionInfoSize(szFilename, &dummy);
+	if (!dwSize)
+		return false;
+
 	std::vector<BYTE> data(dwSize);
 
-    // load the version info
-    if (!GetFileVersionInfo(szFilename, NULL, dwSize, &data[0]))
-        return false;
-    
-    // get the name and version strings
-    LPVOID pvProductName = NULL;
-    unsigned int iProductNameLen = 0;
-    LPVOID pvProductVersion = NULL;
-    unsigned int iProductVersionLen = 0;
+	// load the version info
+	if (!GetFileVersionInfo(szFilename, NULL, dwSize, &data[0]))
+		return false;
 
-    // 000904b0 == language ID
-    if (!VerQueryValue(&data[0], _T("\\StringFileInfo\\000904b0\\ProductName"), &pvProductName, &iProductNameLen) ||
-        !VerQueryValue(&data[0], _T("\\StringFileInfo\\000904b0\\ProductVersion"), &pvProductVersion, &iProductVersionLen))
-        return false;
+	// get the name and version strings
+	LPVOID pvProductName = NULL;
+	unsigned int iProductNameLen = 0;
+	LPVOID pvProductVersion = NULL;
+	unsigned int iProductVersionLen = 0;
 
-    _prodVer = (LPCTSTR)pvProductVersion;
+	// 000904b0 == language ID
+	if (!VerQueryValue(&data[0], _T("\\StringFileInfo\\000904b0\\ProductName"), &pvProductName, &iProductNameLen) ||
+		!VerQueryValue(&data[0], _T("\\StringFileInfo\\000904b0\\ProductVersion"), &pvProductVersion, &iProductVersionLen))
+		return false;
 
-    return true;
+	_prodVer = (LPCTSTR)pvProductVersion;
+
+	return true;
 }
