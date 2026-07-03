@@ -21,4 +21,4 @@ jobs:
 
     - name: MSBuild of plugin dll
       working-directory: .
-      run: msbuild NppPluginTemplate.vcxproj /m /p:configuration="${{ matrix.build_configuration }}" /p:platform="${{ matrix.build_platform }}" /p:PlatformToolset="v143" /p:RunCodeAnalysis=true
+      run: msbuild NppPluginTemplate.vcxproj /m /p:configuration="${{ matrix.build_configuration }}" /p:platform="${{ matrix.build_platform }}" /p:RunCodeAnalysis=true
